@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>CipherTalk — Secure Message Encryption</title>
+<meta name="description" content="Encrypt and decrypt messages instantly with CipherTalk's neon cyber console — Caesar cipher, runs 100% offline in your browser." />
+<style>
+  /* ---------- Theme tokens ---------- */
+  :root{
+    --bg:#070b14;
+    --bg2:#0b1322;
+    --fg:#e6f1ff;
+    --muted:#7d8aa3;
+    --cyber:#3ddcff;
+    --cyber2:#b46bff;
+    --pink:#ff4dd2;
+    --line:rgba(255,255,255,.08);
+    --glass:rgba(255,255,255,.04);
+    --shadow:0 0 30px rgba(61,220,255,.25);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);
+    font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(900px 500px at 80% -10%, rgba(180,107,255,.18), transparent 60%),
+      radial-gradient(800px 600px at -10% 20%, rgba(61,220,255,.18), transparent 60%),
+      linear-gradient(180deg,#070b14, #050912 60%);
+    overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .display{font-family:"Space Grotesk",ui-sans-serif,system-ui,sans-serif;letter-spacing:.02em}
+
+  /* ---------- Layout ---------- */
+  .wrap{max-width:1100px;margin:0 auto;padding:0 20px}
+  header.nav{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:blur(12px);
+    background:rgba(7,11,20,.6);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.15em}
+  .brand .logo{
+    width:30px;height:30px;border-radius:8px;
+    background:conic-gradient(from 180deg,var(--cyber),var(--cyber2),var(--pink),var(--cyber));
+    box-shadow:0 0 18px rgba(61,220,255,.6);
+    position:relative;
+  }
+  .brand .logo::after{
+    content:"";position:absolute;inset:4px;border-radius:5px;background:#0a1020;
+  }
+  .brand span b{color:var(--cyber)}
+  nav.menu a{
+    margin-left:6px;padding:8px 14px;border-radius:8px;color:var(--muted);font-size:14px;
+  }
+  nav.menu a.active,nav.menu a:hover{color:var(--cyber);background:rgba(61,220,255,.08)}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:10px 16px;border-radius:10px;border:1px solid var(--line);
+    background:linear-gradient(135deg,rgba(61,220,255,.18),rgba(180,107,255,.18));
+    color:var(--fg);font-weight:600;cursor:pointer;font-size:14px;
+    transition:transform .15s ease,box-shadow .2s ease, border-color .2s;
+  }
+  .btn:hover{transform:translateY(-1px);box-shadow:var(--shadow);border-color:var(--cyber)}
+  .btn.ghost{background:transparent}
+  .btn.alt{background:linear-gradient(135deg,rgba(180,107,255,.25),rgba(61,220,255,.18))}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:70px 0 30px;text-align:center;position:relative}
+  .grid-bg{
+    position:absolute;inset:0;pointer-events:none;opacity:.25;
+    background-image:
+      linear-gradient(rgba(61,220,255,.15) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(61,220,255,.15) 1px,transparent 1px);
+    background-size:40px 40px;
+    mask-image:radial-gradient(ellipse at center,black 30%,transparent 70%);
+  }
+  .pill{
+    display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;
+    border:1px solid var(--line);background:var(--glass);font-size:12px;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--cyber);
+    box-shadow:0 0 18px rgba(61,220,255,.18);
+  }
+  h1{font-size:clamp(34px,6vw,64px);line-height:1.05;margin:18px 0 12px;font-weight:900}
+  .grad{
+    background:linear-gradient(90deg,var(--cyber),var(--cyber2),var(--pink));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .lead{color:var(--muted);max-width:680px;margin:0 auto;font-size:17px}
+  .lead .type{color:var(--cyber);font-family:ui-monospace,monospace}
+  .caret::after{content:"▍";margin-left:2px;color:var(--cyber);animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .cta-row{display:flex;justify-content:center;gap:12px;margin-top:22px;flex-wrap:wrap}
+
+  /* ---------- Console ---------- */
+  section.console{padding:30px 0 60px}
+  .glass{
+    border:1px solid var(--line);
+    background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+    border-radius:18px;padding:22px;position:relative;overflow:hidden;
+    box-shadow:0 10px 40px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .scanline::before{
+    content:"";position:absolute;inset:0;pointer-events:none;opacity:.15;
+    background:repeating-linear-gradient(0deg,rgba(61,220,255,.4) 0 1px,transparent 1px 4px);
+    mix-blend-mode:overlay;
+  }
+  .console-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+  .console-head h3{margin:0;font-size:16px;letter-spacing:.18em;text-transform:uppercase;color:var(--cyber)}
+  .shift{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+  .shift input{
+    width:74px;padding:8px;border-radius:8px;border:1px solid var(--line);
+    background:rgba(0,0,0,.3);color:var(--fg);text-align:center;font-family:ui-monospace,monospace;
+  }
+  .shift input:focus{outline:none;border-color:var(--cyber);box-shadow:0 0 14px rgba(61,220,255,.4)}
+  textarea{
+    width:100%;min-height:130px;resize:vertical;border-radius:12px;
+    border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--fg);
+    padding:14px;font-family:ui-monospace,monospace;font-size:14px;
+  }
+  textarea:focus{outline:none;border-color:var(--cyber);box-shadow:0 0 18px rgba(61,220,255,.3)}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .actions .spacer{flex:1}
+  .out-head{display:flex;justify-content:space-between;align-items:center;margin:18px 0 8px}
+  .out-head span{font-size:11px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase}
+  .output{
+    min-height:120px;border-radius:12px;border:1px solid var(--line);
+    background:rgba(0,0,0,.4);padding:14px;font-family:ui-monospace,monospace;
+    font-size:14px;color:var(--cyber);word-break:break-all;white-space:pre-wrap;
+  }
+  .placeholder{color:rgba(125,138,163,.7)}
+  .small{padding:6px 10px;font-size:12px}
+  .spinner{
+    width:14px;height:14px;border:2px solid rgba(61,220,255,.3);
+    border-top-color:var(--cyber);border-radius:50%;animation:spin .8s linear infinite;display:inline-block;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ---------- Features ---------- */
+  section.feat{padding:30px 0 60px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .card{padding:20px;border-radius:14px;border:1px solid var(--line);background:var(--glass);transition:transform .2s,border-color .2s,box-shadow .2s}
+  .card:hover{transform:translateY(-3px);border-color:rgba(61,220,255,.5);box-shadow:0 0 30px rgba(61,220,255,.15)}
+  .card .ico{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;background:rgba(61,220,255,.12);color:var(--cyber);margin-bottom:10px;font-size:18px}
+  .card h4{margin:6px 0 6px;font-size:16px}
+  .card p{margin:0;color:var(--muted);font-size:14px;line-height:1.5}
+
+  /* ---------- Login ---------- */
+  section.login{padding:30px 0 80px}
+  .login-card{max-width:420px;margin:0 auto}
+  .login-card label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px;letter-spacing:.1em;text-transform:uppercase}
+  .login-card input{
+    width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);
+    background:rgba(0,0,0,.35);color:var(--fg);
+  }
+  .login-card input:focus{outline:none;border-color:var(--cyber);box-shadow:0 0 14px rgba(61,220,255,.3)}
+  .login-card .btn{width:100%;justify-content:center;margin-top:18px}
+
+  /* ---------- Footer ---------- */
+  footer{border-top:1px solid var(--line);background:rgba(7,11,20,.6);backdrop-filter:blur(10px);margin-top:30px}
+  .foot{display:flex;justify-content:space-between;align-items:center;padding:20px 0;flex-wrap:wrap;gap:10px;color:var(--muted);font-size:13px}
+
+  /* Responsive */
+  @media (max-width:780px){
+    nav.menu{display:none}
+    .grid3{grid-template-columns:1fr}
+    h1{font-size:38px}
+  }
+
+  /* Section title */
+  .sec-title{text-align:center;margin:0 0 20px}
+  .sec-title h2{font-size:28px;margin:0 0 6px}
+  .sec-title p{color:var(--muted);margin:0;font-size:14px}
+</style>
+</head>
+<body>
+
+<!-- ======= NAVBAR ======= -->
+<header class="nav">
+  <div class="wrap nav-row">
+    <a href="#home" class="brand">
+      <div class="logo"></div>
+      <span class="display">CIPHER<b>TALK</b></span>
+    </a>
+    <nav class="menu">
+      <a href="#home" class="active">Home</a>
+      <a href="#console">Console</a>
+      <a href="#features">Features</a>
+      <a href="#login">Login</a>
+    </nav>
+    <a href="#console" class="btn small">Launch</a>
+  </div>
+</header>
+
+<!-- ======= HERO ======= -->
+<section class="hero" id="home">
+  <div class="grid-bg"></div>
+  <div class="wrap">
+    <div class="pill">🛡 End-to-end client-side cipher</div>
+    <h1 class="display">Encrypt the unsayable.<br><span class="grad">Decrypt the impossible.</span></h1>
+    <p class="lead">CipherTalk turns plain text into <span class="type caret" id="typer"></span></p>
+    <div class="cta-row">
+      <a href="#console" class="btn">🔒 Launch Console</a>
+      <a href="#features" class="btn ghost">Learn more</a>
+    </div>
+  </div>
+</section>
+
+<!-- ======= CONSOLE ======= -->
+<section class="console" id="console">
+  <div class="wrap">
+    <div class="glass scanline">
+      <div class="console-head">
+        <h3>🔑 Cipher Console</h3>
+        <div class="shift">
+          <label for="shift">Shift key</label>
+          <input id="shift" type="number" value="3" />
+        </div>
+      </div>
+      <textarea id="input" placeholder="Type or paste your secret message here..."></textarea>
+      <div class="actions">
+        <button class="btn" id="encBtn">🔒 Encrypt</button>
+        <button class="btn alt" id="decBtn">🔓 Decrypt</button>
+        <div class="spacer"></div>
+        <button class="btn ghost" id="clrBtn">🗑 Clear</button>
+      </div>
+      <div class="out-head">
+        <span>Output</span>
+        <button class="btn ghost small" id="copyBtn">📋 Copy</button>
+      </div>
+      <div class="output" id="output"><span class="placeholder">// Awaiting input — encrypted output appears here.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======= FEATURES ======= -->
+<section class="feat" id="features">
+  <div class="wrap">
+    <div class="sec-title">
+      <h2 class="display">Why <span class="grad">CipherTalk</span></h2>
+      <p>Lightweight, private, and built for learning.</p>
+    </div>
+    <div class="grid3">
+      <div class="card"><div class="ico">🔒</div><h4>Zero data leaves</h4><p>All encryption runs locally in your browser — your message never touches a server.</p></div>
+      <div class="card"><div class="ico">🧠</div><h4>C-powered logic</h4><p>Mirrors a documented C backend (Caesar cipher) you can compile and run yourself.</p></div>
+      <div class="card"><div class="ico">⚡</div><h4>Instant cipher</h4><p>Tweak the shift key and watch your text transform character by character in real time.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======= LOGIN (UI only) ======= -->
+<section class="login" id="login">
+  <div class="wrap">
+    <div class="sec-title">
+      <h2 class="display">Operator <span class="grad">Login</span></h2>
+      <p>Demo UI only — no data is sent anywhere.</p>
+    </div>
+    <form class="glass login-card" onsubmit="event.preventDefault(); alert('Demo login — no backend connected.');">
+      <label for="email">Email</label>
+      <input id="email" type="email" placeholder="agent@ciphertalk.io" required />
+      <label for="pass">Password</label>
+      <input id="pass" type="password" placeholder="••••••••" required />
+      <button class="btn" type="submit">🔐 Sign in securely</button>
+    </form>
+  </div>
+</section>
+
+<!-- ======= FOOTER ======= -->
+<footer>
+  <div class="wrap foot">
+    <div>© <span id="yr"></span> CipherTalk — Secure by design.</div>
+    <div>Runs 100% offline · Caesar cipher demo</div>
+  </div>
+</footer>
+
+<script>
+  /* ============================================================
+   * CipherTalk — single-file offline build
+   * Caesar cipher logic mirrors the included C backend.
+   * ============================================================ */
+
+  // ---- Caesar cipher ----
+  function normalize(s){ s = s % 26; return s < 0 ? s + 26 : s; }
+  function caesar(text, shift){
+    const s = normalize(shift);
+    let out = "";
+    for (let i = 0; i < text.length; i++){
+      const c = text.charCodeAt(i);
+      if (c >= 65 && c <= 90)       out += String.fromCharCode((c - 65 + s) % 26 + 65);
+      else if (c >= 97 && c <= 122) out += String.fromCharCode((c - 97 + s) % 26 + 97);
+      else out += text[i];
+    }
+    return out;
+  }
+  const encrypt = (t,s) => caesar(t, s);
+  const decrypt = (t,s) => caesar(t, -s);
+
+  // ---- DOM hooks ----
+  const $ = id => document.getElementById(id);
+  const input = $("input"), output = $("output"), shift = $("shift");
+
+  function setOutput(html, isPlaceholder){
+    output.innerHTML = isPlaceholder ? '<span class="placeholder">'+html+'</span>' : html;
+  }
+  function run(mode){
+    const text = input.value;
+    if (!text.trim()) { setOutput("// Type something to encrypt or decrypt.", true); return; }
+    setOutput('<span class="spinner"></span> &nbsp;Processing in secure channel...', false);
+    setTimeout(() => {
+      const s = parseInt(shift.value || "0", 10);
+      const result = mode === "enc" ? encrypt(text, s) : decrypt(text, s);
+      setOutput(result.replace(/[<>&]/g, ch => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[ch])), false);
+    }, 420);
+  }
+
+  $("encBtn").onclick = () => run("enc");
+  $("decBtn").onclick = () => run("dec");
+  $("clrBtn").onclick = () => { input.value = ""; setOutput("// Awaiting input — encrypted output appears here.", true); };
+  $("copyBtn").onclick = async () => {
+    const txt = output.innerText.trim();
+    if (!txt || txt.startsWith("//")) return;
+    try { await navigator.clipboard.writeText(txt); flash($("copyBtn"), "✅ Copied"); }
+    catch { flash($("copyBtn"), "⚠ Failed"); }
+  };
+  function flash(btn, label){
+    const old = btn.innerHTML; btn.innerHTML = label;
+    setTimeout(() => btn.innerHTML = old, 1400);
+  }
+
+  // ---- Typewriter ----
+  const phrases = ["unreadable cipher.","secure transmissions.","Caesar-encoded glyphs.","your private signal."];
+  const typer = $("typer");
+  let pi = 0, ti = 0, deleting = false;
+  function tick(){
+    const cur = phrases[pi % phrases.length];
+    typer.textContent = deleting ? cur.slice(0, --ti) : cur.slice(0, ++ti);
+    let delay = deleting ? 35 : 65;
+    if (!deleting && ti === cur.length){ deleting = true; delay = 1300; }
+    else if (deleting && ti === 0){ deleting = false; pi++; delay = 250; }
+    setTimeout(tick, delay);
+  }
+  tick();
+
+  // ---- Footer year ----
+  $("yr").textContent = new Date().getFullYear();
+
+  // ---- Smooth nav highlight ----
+  document.querySelectorAll('nav.menu a').forEach(a => {
+    a.addEventListener('click', () => {
+      document.querySelectorAll('nav.menu a').forEach(x => x.classList.remove('active'));
+      a.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
